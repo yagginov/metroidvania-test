@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://be58cil08xmuf"]
+
+[ext_resource type="Texture2D" uid="uid://ckfwv7fipsv1c" path="res://icon.svg" id="1_i17dy"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b0cre"]
+size = Vector2(18, 18)
+
+[node name="Pawn" type="Character"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("1_i17dy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_b0cre")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -20.0
+offset_top = -36.0
+offset_right = 20.0
+offset_bottom = -13.0
+scale = Vector2(1.05376, 0.832777)
+text = "test"
+autowrap_mode = 3

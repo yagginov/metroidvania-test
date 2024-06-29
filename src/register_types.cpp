@@ -6,7 +6,8 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "BasePawn.h"
+#include "Pawn.h"
+#include "Character.h"
 
 using namespace godot;
 
@@ -15,7 +16,8 @@ void initialize_module(ModuleInitializationLevel p_level) {
 		return;
 	}
 
-	GDREGISTER_CLASS(BasePawn);
+	GDREGISTER_CLASS(Pawn);
+	GDREGISTER_CLASS(Character);
 }
 
 void uninitialize_module(ModuleInitializationLevel p_level) {
