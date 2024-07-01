@@ -7,6 +7,7 @@
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/label.hpp>
 #include <godot_cpp/classes/area2d.hpp>
+#include <godot_cpp/classes/animated_sprite2d.hpp>
 
 #include "State.h"
 
@@ -32,15 +33,16 @@ protected:
 
 private:
     Input* i;
-	bool inDoubleJump;
+
 	States state;
 	Vector<State*> v_states;
+	bool inDoubleJump;
+
 	Vector2 _velocity;
 	double _direction;
-	State allowedJump;
 
-	Area2D* findGroundArea;
-	bool b_inGround;
+	AnimatedSprite2D* animatedSprite;
+	double maxAnimationSpeed;
 
 public:
 	double _jumpMagnitude;
@@ -59,9 +61,6 @@ public:
 	void jump(double delta);
 	void fall(double delta);
 	void slide(double delta);
-
-	void _on_detection_ground_entered(Node2D* node);
-	void _on_detection_ground_exited(Node2D* node);
 
 	void set_jumpMagnitude(const double jumpMagnitude);
 	double get_jumpMagnitude() const;

@@ -13,14 +13,10 @@ void Character::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_isAllowedDoubleJump"), &Character::get_isAllowedDoubleJump);
 	ClassDB::bind_method(D_METHOD("set_isAllowedDoubleJump", "isAllowedDoubleJump"), &Character::set_isAllowedDoubleJump);
 	ClassDB::add_property("Character", PropertyInfo(Variant::BOOL, "_isAllowedDoubleJump"), "set_isAllowedDoubleJump", "get_isAllowedDoubleJump");
-
-	ClassDB::bind_method(D_METHOD("_on_detection_ground_entered", "area"), &Character::_on_detection_ground_entered);
-	ClassDB::bind_method(D_METHOD("_on_detection_ground_exited", "area"), &Character::_on_detection_ground_exited);
 }
 
 
-Character::Character() :
-allowedJump(0.12)
+Character::Character()
 {
 	// Initialize any variables here.
     i = Input::get_singleton();
@@ -39,8 +35,8 @@ allowedJump(0.12)
 	_isAllowedDoubleJump = false;
 	inDoubleJump = true;
 
-	findGroundArea = nullptr;
-	b_inGround = false;
+	maxAnimationSpeed = 20;
+
 }
 
 Character::~Character() 
@@ -52,15 +48,8 @@ void Character::_ready()
 {
 	add_to_group("Character");
 
-	allowedJump.is_start();
 
-	findGroundArea = get_node<Area2D>("FindGroundArea");
-	if (findGroundArea)
-	{
-		findGroundArea->connect("body_entered", Callable(this, "_on_detection_ground_entered"));
-		findGroundArea->connect("body_exited", Callable(this, "_on_detection_ground_exited"));
-	}
-	
+	animatedSprite = get_node<AnimatedSprite2D>("AnimatedSprite2D");
 }
 
 void Character::_process(double delta) 
@@ -70,11 +59,32 @@ void Character::_process(double delta)
 
 void Character::_physics_process(double delta) 
 {
-	//UtilityFunctions::print(findGroundArea->has_overlapping_bodies() ? "true" : "false");
-	//UtilityFunctions::print(b_inGround ? "true" : "false");
-
 	_direction = i->get_axis("ui_left", "ui_right");
 	_velocity = get_velocity();
+
+
+	if (i->is_action_just_pressed("ui_accept") && is_on_floor())
+	{
+		v_states[state]->reset();
+		state = States::jump;
+	}
+
+	if (_velocity.x == 0)
+	{
+		animatedSprite->play("idle");
+	}
+	else
+	{
+		animatedSprite->play("move", abs(_velocity.x) / _maxSpeed);
+		if (_velocity.x < 0)
+		{
+			animatedSprite->set_flip_h(true);
+		}
+		else
+		{
+			animatedSprite->set_flip_h(false);
+		}
+	}
 
 	switch(state)
 	{
@@ -84,21 +94,15 @@ void Character::_physics_process(double delta)
 		break;
 
 	case States::run :
-		//UtilityFunctions::print("run");
 		run(delta);
 		break;
 
 	case States::jump :
-		//UtilityFunctions::print("jump");
-		jump(delta);
-		break;
 	case States::doubleJump:
-		//UtilityFunctions::print("double jump");
 		jump(delta);
 		break;
 
 	case States::fall :
-		//UtilityFunctions::print("fall");
 		fall(delta);
 		break;
 
@@ -118,20 +122,11 @@ void Character::idle(double delta)
 	{
 		inDoubleJump = false;
 	}
-
-    if (i->is_action_just_pressed("ui_accept"))
-	{
-		v_states[state]->reset();
-		state = States::jump;
-		jump(delta);
-		return;
-	}
     
-	if (!b_inGround)
+	if (!is_on_floor())
 	{
 		v_states[state]->reset();
 		state = States::fall;
-		fall(delta);
 		return;
 	}
 
@@ -144,14 +139,7 @@ void Character::idle(double delta)
 
 void Character::run(double delta)
 {
-	if (i->is_action_just_pressed("ui_accept"))
-	{
-		v_states[state]->reset();
-		state = States::jump;
-		return;
-	}
-
-	if (!b_inGround)
+	if (!is_on_floor())
 	{
 		v_states[state]->reset();
 		state = States::fall;
@@ -173,7 +161,7 @@ void Character::jump(double delta)
 		return;
 	}
 
-	if (i->is_action_just_pressed("ui_accept") && (_isAllowedDoubleJump && !inDoubleJump))
+	if (i->is_action_just_pressed("ui_accept") && _isAllowedDoubleJump && !inDoubleJump)
 	{
 		inDoubleJump = true;
 		v_states[state]->reset();
@@ -181,7 +169,7 @@ void Character::jump(double delta)
 		return;
 	}
 
-	if (!b_inGround)
+	if (_velocity.y > 0.5)
 	{
 		v_states[state]->reset();
 		state = States::fall;
@@ -198,6 +186,12 @@ void Character::fall(double delta)
 		state = States::jump;
 		return;
 	}
+
+	if (is_on_floor())
+	{
+		v_states[state]->reset();
+		state = States::idle;
+	}
 }
 
 void Character::slide(double delta)
@@ -205,24 +199,6 @@ void Character::slide(double delta)
 	
 }
 
-
-void Character::_on_detection_ground_entered(Node2D* node)
-{
-	if(node->is_in_group("ground"))
-	{
-		v_states[state]->reset();
-		state = States::idle;
-		b_inGround = true;
-	}
-}
-
-void Character::_on_detection_ground_exited(Node2D* node)
-{
-	if(node->is_in_group("ground"))
-	{
-		b_inGround = false;
-	}
-}
 
 void Character::set_jumpMagnitude(const double jumpMagnitude)
 {

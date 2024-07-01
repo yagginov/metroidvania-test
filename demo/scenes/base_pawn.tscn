@@ -1,29 +1,66 @@
-[gd_scene load_steps=4 format=3 uid="uid://be58cil08xmuf"]
+[gd_scene load_steps=9 format=3 uid="uid://be58cil08xmuf"]
 
-[ext_resource type="Texture2D" uid="uid://bv1amx72mgult" path="res://resources/sprites/Ball.png" id="1_yb26m"]
+[ext_resource type="Texture2D" uid="uid://ltpqboenk1cs" path="res://resources/sprites/SpeedSqaure.png" id="1_wwc66"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_emcdf"]
-radius = 7.0
+[sub_resource type="AtlasTexture" id="AtlasTexture_6xgxl"]
+atlas = ExtResource("1_wwc66")
+region = Rect2(0, 0, 16, 16)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_2y273"]
-size = Vector2(12, 2.4375)
+[sub_resource type="AtlasTexture" id="AtlasTexture_xwbne"]
+atlas = ExtResource("1_wwc66")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cf7qe"]
+atlas = ExtResource("1_wwc66")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ls6hu"]
+atlas = ExtResource("1_wwc66")
+region = Rect2(0, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pavsp"]
+atlas = ExtResource("1_wwc66")
+region = Rect2(16, 16, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_mf3tl"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6xgxl")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xwbne")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cf7qe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ls6hu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pavsp")
+}],
+"loop": true,
+"name": &"move",
+"speed": 20.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fdvd6"]
+size = Vector2(15.95, 15.95)
 
 [node name="Pawn" type="Character"]
 collision_layer = 4
 collision_mask = 4
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(0.5, 0.5)
-texture = ExtResource("1_yb26m")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_mf3tl")
+animation = &"idle"
+frame_progress = 0.434
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_emcdf")
-
-[node name="FindGroundArea" type="Area2D" parent="."]
-position = Vector2(0, 14)
-collision_layer = 4
-collision_mask = 4
-priority = 1
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="FindGroundArea"]
-shape = SubResource("RectangleShape2D_2y273")
+shape = SubResource("RectangleShape2D_fdvd6")
