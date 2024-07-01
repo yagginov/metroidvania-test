@@ -13,10 +13,14 @@ class Pawn : public CharacterBody2D {
 protected:
 	static void _bind_methods();
 
+private:
+	double g;
+
 public:
 	double _maxSpeed;
 	double _acceleration;
 	bool _isPhysicsEnabled;
+	double _dragCoefficient;
 
 public:
 	Pawn();
@@ -36,8 +40,11 @@ public:
 
 	void set_isPhysicsEnabled(const bool isPhysicsEnabled);
 	bool get_isPhysicsEnabled() const;
+
+	void set_dragCoefficient(const double dragCoefficient);
+	double get_dragCoefficient() const;
 };
 
-}
+}	// namespace godot
 
 #endif // BASE_PAWN_H

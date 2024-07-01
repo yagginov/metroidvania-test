@@ -1,5 +1,6 @@
 #include "Pawn.h"
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/core/math.hpp>
 
 using namespace godot;
 
@@ -18,6 +19,10 @@ void Pawn::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_isPhysicsEnabled", "isPhysicsEnabled"), &Pawn::set_isPhysicsEnabled);
 	ClassDB::add_property("Pawn", PropertyInfo(Variant::BOOL, "_isPhysicsEnabled"), "set_isPhysicsEnabled", "get_isPhysicsEnabled");
 
+	ClassDB::bind_method(D_METHOD("get_dragCoefficient"), &Pawn::get_dragCoefficient);
+	ClassDB::bind_method(D_METHOD("set_dragCoefficient", "dragCoefficient"), &Pawn::set_dragCoefficient);
+	ClassDB::add_property("Pawn", PropertyInfo(Variant::FLOAT, "_dragCoefficient"), "set_dragCoefficient", "get_dragCoefficient");
+
 }
 
 
@@ -27,6 +32,10 @@ Pawn::Pawn()
 	_maxSpeed = 500;
 	_acceleration = 800;
 	_isPhysicsEnabled = false;
+
+	_dragCoefficient = 0.5;
+
+	g = 198;
 }
 
 Pawn::~Pawn() 
@@ -53,7 +62,7 @@ void Pawn::_physics_process(double delta)
 void Pawn::move(double direction, double delta)
 {
 	Vector2 velocity = get_velocity();
-	velocity.x = direction * _maxSpeed;
+	velocity.x = Math::move_toward((double)velocity.x, direction * _maxSpeed, _dragCoefficient * g);
 	
 	if (_isPhysicsEnabled && !is_on_floor())
 	{
@@ -90,4 +99,13 @@ void Pawn::set_isPhysicsEnabled(const bool isPhysicsEnabled)
 bool Pawn::get_isPhysicsEnabled() const
 {
 	return _isPhysicsEnabled;
+}
+
+void Pawn::set_dragCoefficient(const double dragCoefficient)
+{
+	_dragCoefficient = dragCoefficient;
+}
+double Pawn::get_dragCoefficient() const
+{
+	return _dragCoefficient;
 }

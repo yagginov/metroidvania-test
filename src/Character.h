@@ -6,6 +6,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/label.hpp>
+#include <godot_cpp/classes/area2d.hpp>
 
 #include "State.h"
 
@@ -36,8 +37,10 @@ private:
 	Vector<State*> v_states;
 	Vector2 _velocity;
 	double _direction;
+	State allowedJump;
 
-	Label *label;
+	Area2D* findGroundArea;
+	bool b_inGround;
 
 public:
 	double _jumpMagnitude;
@@ -57,6 +60,8 @@ public:
 	void fall(double delta);
 	void slide(double delta);
 
+	void _on_detection_ground_entered(Node2D* node);
+	void _on_detection_ground_exited(Node2D* node);
 
 	void set_jumpMagnitude(const double jumpMagnitude);
 	double get_jumpMagnitude() const;

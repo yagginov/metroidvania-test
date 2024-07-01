@@ -1,24 +1,29 @@
-[gd_scene load_steps=3 format=3 uid="uid://be58cil08xmuf"]
+[gd_scene load_steps=4 format=3 uid="uid://be58cil08xmuf"]
 
-[ext_resource type="Texture2D" uid="uid://ckfwv7fipsv1c" path="res://icon.svg" id="1_i17dy"]
+[ext_resource type="Texture2D" uid="uid://bv1amx72mgult" path="res://resources/sprites/Ball.png" id="1_yb26m"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_b0cre"]
-size = Vector2(18, 18)
+[sub_resource type="CircleShape2D" id="CircleShape2D_emcdf"]
+radius = 7.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2y273"]
+size = Vector2(12, 2.4375)
 
 [node name="Pawn" type="Character"]
+collision_layer = 4
+collision_mask = 4
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(0.15, 0.15)
-texture = ExtResource("1_i17dy")
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_yb26m")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_b0cre")
+shape = SubResource("CircleShape2D_emcdf")
 
-[node name="Label" type="Label" parent="."]
-offset_left = -20.0
-offset_top = -36.0
-offset_right = 20.0
-offset_bottom = -13.0
-scale = Vector2(1.05376, 0.832777)
-text = "test"
-autowrap_mode = 3
+[node name="FindGroundArea" type="Area2D" parent="."]
+position = Vector2(0, 14)
+collision_layer = 4
+collision_mask = 4
+priority = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FindGroundArea"]
+shape = SubResource("RectangleShape2D_2y273")

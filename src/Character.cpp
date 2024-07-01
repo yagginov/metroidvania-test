@@ -1,5 +1,6 @@
 #include "Character.h"
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -12,10 +13,14 @@ void Character::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_isAllowedDoubleJump"), &Character::get_isAllowedDoubleJump);
 	ClassDB::bind_method(D_METHOD("set_isAllowedDoubleJump", "isAllowedDoubleJump"), &Character::set_isAllowedDoubleJump);
 	ClassDB::add_property("Character", PropertyInfo(Variant::BOOL, "_isAllowedDoubleJump"), "set_isAllowedDoubleJump", "get_isAllowedDoubleJump");
+
+	ClassDB::bind_method(D_METHOD("_on_detection_ground_entered", "area"), &Character::_on_detection_ground_entered);
+	ClassDB::bind_method(D_METHOD("_on_detection_ground_exited", "area"), &Character::_on_detection_ground_exited);
 }
 
 
-Character::Character() 
+Character::Character() :
+allowedJump(0.12)
 {
 	// Initialize any variables here.
     i = Input::get_singleton();
@@ -33,6 +38,9 @@ Character::Character()
 
 	_isAllowedDoubleJump = false;
 	inDoubleJump = true;
+
+	findGroundArea = nullptr;
+	b_inGround = false;
 }
 
 Character::~Character() 
@@ -44,7 +52,15 @@ void Character::_ready()
 {
 	add_to_group("Character");
 
-	label = get_node<Label>("Label");
+	allowedJump.is_start();
+
+	findGroundArea = get_node<Area2D>("FindGroundArea");
+	if (findGroundArea)
+	{
+		findGroundArea->connect("body_entered", Callable(this, "_on_detection_ground_entered"));
+		findGroundArea->connect("body_exited", Callable(this, "_on_detection_ground_exited"));
+	}
+	
 }
 
 void Character::_process(double delta) 
@@ -54,47 +70,35 @@ void Character::_process(double delta)
 
 void Character::_physics_process(double delta) 
 {
+	//UtilityFunctions::print(findGroundArea->has_overlapping_bodies() ? "true" : "false");
+	//UtilityFunctions::print(b_inGround ? "true" : "false");
+
 	_direction = i->get_axis("ui_left", "ui_right");
 	_velocity = get_velocity();
 
 	switch(state)
 	{
 	case States::idle : 
-		if (label)
-		{
-			label->set_text("idle");
-		}
+		//UtilityFunctions::print("idle");
 		idle(delta);
 		break;
 
 	case States::run :
-		if (label)
-		{
-			label->set_text("run");
-		}
+		//UtilityFunctions::print("run");
 		run(delta);
 		break;
 
 	case States::jump :
-		if (label)
-		{
-			label->set_text("jump");
-		}
+		//UtilityFunctions::print("jump");
 		jump(delta);
 		break;
 	case States::doubleJump:
-		if (label)
-		{
-			label->set_text("double jump");
-		}
+		//UtilityFunctions::print("double jump");
 		jump(delta);
 		break;
 
 	case States::fall :
-		if (label)
-		{
-			label->set_text("fall");
-		}
+		//UtilityFunctions::print("fall");
 		fall(delta);
 		break;
 
@@ -110,19 +114,20 @@ void Character::_physics_process(double delta)
 
 void Character::idle(double delta)
 {
-	if (v_states[state]->is_start())
+	if (v_states[state]->is_start()) 
 	{
 		inDoubleJump = false;
 	}
 
-    if (i->is_action_just_pressed("jump") && is_on_floor())
+    if (i->is_action_just_pressed("ui_accept"))
 	{
 		v_states[state]->reset();
 		state = States::jump;
 		jump(delta);
+		return;
 	}
     
-	if (_velocity.y > 0.5)
+	if (!b_inGround)
 	{
 		v_states[state]->reset();
 		state = States::fall;
@@ -134,24 +139,22 @@ void Character::idle(double delta)
 	{
 		v_states[state]->reset();
 		state = States::run;
-		run(delta);
 	}
 }
 
 void Character::run(double delta)
 {
-	if (i->is_action_just_pressed("jump") && is_on_floor())
+	if (i->is_action_just_pressed("ui_accept"))
 	{
 		v_states[state]->reset();
 		state = States::jump;
-		jump(delta);
+		return;
 	}
 
-	if (_velocity.y > 0.5)
+	if (!b_inGround)
 	{
 		v_states[state]->reset();
 		state = States::fall;
-		fall(delta);
 		return;
 	}
 
@@ -159,7 +162,6 @@ void Character::run(double delta)
 	{
 		v_states[state]->reset();
 		state = States::idle;
-		idle(delta);
 	}
 }
 
@@ -171,38 +173,30 @@ void Character::jump(double delta)
 		return;
 	}
 
-	if (i->is_action_just_pressed("jump") && (_isAllowedDoubleJump && !inDoubleJump))
+	if (i->is_action_just_pressed("ui_accept") && (_isAllowedDoubleJump && !inDoubleJump))
 	{
 		inDoubleJump = true;
 		v_states[state]->reset();
-		state = States::doubleJump;
-		jump(delta);
+		state = States::jump;
+		return;
 	}
 
-	if (_velocity.y > 0.5)
+	if (!b_inGround)
 	{
 		v_states[state]->reset();
 		state = States::fall;
-		fall(delta);
 	}
 
 }
 
 void Character::fall(double delta)
 {
-	if (i->is_action_just_pressed("jump") && (_isAllowedDoubleJump && !inDoubleJump))
+	if (i->is_action_just_pressed("ui_accept") && _isAllowedDoubleJump && !inDoubleJump)
 	{
 		inDoubleJump = true;
 		v_states[state]->reset();
-		state = States::doubleJump;
-		jump(delta);
-	}
-
-	if (is_on_floor())
-	{
-		v_states[state]->reset();
-		state = States::idle;
-		idle(delta);
+		state = States::jump;
+		return;
 	}
 }
 
@@ -212,6 +206,23 @@ void Character::slide(double delta)
 }
 
 
+void Character::_on_detection_ground_entered(Node2D* node)
+{
+	if(node->is_in_group("ground"))
+	{
+		v_states[state]->reset();
+		state = States::idle;
+		b_inGround = true;
+	}
+}
+
+void Character::_on_detection_ground_exited(Node2D* node)
+{
+	if(node->is_in_group("ground"))
+	{
+		b_inGround = false;
+	}
+}
 
 void Character::set_jumpMagnitude(const double jumpMagnitude)
 {
